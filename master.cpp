@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "master.h"
+#include "shared.h"
 #include <errno.h>
 
 // Constants
