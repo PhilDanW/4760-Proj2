@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "master.h"
-#include "sharedStructures.h"
+#include "shared.h"
 
 // Static process counter => Never > 20 (1 Parent + 19 Children)
 const int MAX_PROCESSES = 19;
