@@ -73,10 +73,10 @@ int main(int argc, char* argv[])
         cout << "Master starting: " << endl 
             << "\t" << nNumberOfChildren << " Max Processes" << endl
             << "\t" << nNumberOfSeconds  << " Max Seconds" << endl << endl;
-
-        // Start the Master process, returning whatever master returns.
-        return processMaster(nNumberOfChildren, nNumberOfSeconds, FileToProcess);
     }
+    
+    // Start the Master process, returning whatever master returns.
+    processMaster(nNumberOfChildren, nNumberOfSeconds, FileToProcess);
 
     // Otherwise, an error -- must pass a filename
     perror ("Error: You must enter a data file to process");
