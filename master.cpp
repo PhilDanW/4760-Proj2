@@ -82,12 +82,12 @@ int processMaster(int numChildren, int seconds, string dataFile)
     int itemCount = array.size();
     
     // Allocate the shared memory
-    if ((key = ftok(HostProcess, 100)) == -1) {
+    if ((key = ftok(Host, 100)) == -1) {
         perror("ftok");
         exit(EXIT_FAILURE);
     }
     else {
-        int memSize = sizeof(AddItem) * itemCount;
+        int memSize = sizeof(SharedItem) * itemCount;
         shm_id = shmget(key, memSize, IPC_CREAT | IPC_EXCL | 0660);
         if (shm_id == -1) {
             perror("shmget: ");
@@ -103,17 +103,17 @@ int processMaster(int numChildren, int seconds, string dataFile)
     }
     num = (int*) shm_addr;
     *num = 0;
-    node = (struct AddItem*) (shm_addr+sizeof(int));
+    node = (struct SharedItem*) (shm_addr+sizeof(int));
 
     // Fill the struct with values
     for(int i=0; i < itemCount; i++)
     {
-        node[i].itemValue = array[i];
-        node[i].pidAssigned = 0;
-        node[i].complete = false;
-        node[i].readyToProcess = true; //(i%2==0);
+        node[i].ready = true; //(i%2==0);
+        node[i].pid = 0;
+        node[i].finished = false;
         node[i].nodeDepth = -1;
-        node[i].itemState = idle;
+        node[i].value = array[i];
+        node[i].nodeState = idle;
     }
 
     // Start Processing with bin_adder
@@ -122,7 +122,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
     int wstatus;
 
     for(int j=0; j < itemCount; j++)
-        cout << "\t" << node[j].itemValue;
+        cout << "\t" << node[j].value;
         cout << endl;
     
     // Set a variable to keep track of target level
@@ -148,11 +148,11 @@ int processMaster(int numChildren, int seconds, string dataFile)
                     // If the current nodes looked at are ready to process and
                     // haven't already been processed for this depth, process them
                     if(node[nCheck1].nodeDepth < i
-                        && node[nCheck1].readyToProcess && node[nCheck2].readyToProcess
+                        && node[nCheck1].ready && node[nCheck2].ready
                         && node[nCheck1].nodeDepth == node[nCheck2].nodeDepth)
                     {
                         // Set as processing
-                        node[nCheck1].readyToProcess = node[nCheck2].readyToProcess = false;
+                        node[nCheck1].ready = node[nCheck2].ready = false;
                         // Set the depth of it's last process run
                         node[nCheck1].nodeDepth = node[nCheck2].nodeDepth = i;
                         
@@ -161,7 +161,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
 
                         // Fork and store pid in each node
                         int pid = forkProcess(nCheck1, i);
-                        node[nCheck1].pidAssigned = node[nCheck2].pidAssigned = pid;
+                        node[nCheck1].pid = node[nCheck2].pid = pid;
                     }
                 }
             }
@@ -180,8 +180,8 @@ int processMaster(int numChildren, int seconds, string dataFile)
                 for(int i=0;i<itemCount;i++)
                 {
                     // Send a signal to close if they are in-process
-                    if(node[i].readyToProcess == false)
-                        kill(node[i].pidAssigned, SIGQUIT); 
+                    if(node[i].ready == false)
+                        kill(node[i].pid, SIGQUIT); 
                 }
 
                 // We have notified children to terminate immediately
@@ -205,9 +205,9 @@ int processMaster(int numChildren, int seconds, string dataFile)
                 if(!dead)
                 {
                     // addition is complete.  Show final value
-                    int length = snprintf( NULL, 0, "%d", node[0].itemValue);
+                    int length = snprintf( NULL, 0, "%d", node[0].value);
                     char* sDep = (char*)malloc( length + 1 );
-                    snprintf( sDep, length + 1, "%d", node[0].itemValue);
+                    snprintf( sDep, length + 1, "%d", node[0].value);
                     string strFinalVal = "*** Addition Process Finished: ";
                     strFinalVal.append(sDep);                    
                     free(sDep);
@@ -230,7 +230,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
 
                 // Success! Child processed correctly = Show it
                 for(int j=0; j < itemCount; j++)
-                    cout << "\t" << node[j].itemValue;
+                    cout << "\t" << node[j].value;
                 cout << endl;
 
                 // Print out the instance terminated
@@ -245,7 +245,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
                 perror(strFormattedResult.c_str());
 
                 // Terminate the entire process => Entire tree has processed
-                if(node[0].pidAssigned == waitPID && node[0].nodeDepth==nDepth)
+                if(node[0].pid == waitPID && node[0].nodeDepth==nDepth)
                 {
                     // Flag to break down structure
                     done = true;
@@ -256,10 +256,10 @@ int processMaster(int numChildren, int seconds, string dataFile)
                     // Find the item in the array based on PID
                     for(int i=0;i<itemCount;i++)
                     {
-                        if(node[i].pidAssigned == waitPID)
+                        if(node[i].pid == waitPID)
                         {
                             // Set this node as ready to process and continue
-                            node[i].readyToProcess = true;
+                            node[i].ready = true;
                             break;
                         }
                     }
@@ -323,7 +323,7 @@ int forkProcess(int start, int depth)
             free(sDep);
 
             // Execute child process
-            execl(ChildProcess, strItemStart.c_str(), strDepth.c_str(), NULL);
+            execl(Child, strItemStart.c_str(), strDepth.c_str(), NULL);
 
             fflush(stdout);
             exit(EXIT_SUCCESS);    // Exit from forked process successfully
