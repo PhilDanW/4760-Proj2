@@ -1,3 +1,16 @@
+/********************************************
+ * main - Processes and shared memory
+ * This file is for the main function of the
+ * application.  It simply makes sure the
+ * program arguements are correct, then
+ * kicks off the master functionality for
+ * processing.
+ * 
+ * Brett Huffman
+ * CMP SCI 4760 - Project 2
+ * Due Feb 23, 2021
+ * Main CPP file for project
+ ********************************************/
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -6,12 +19,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "master.h"
-#include "shared.h"
 #include <errno.h>
 
 // Constants
 const int MaxNumberOfChildren = 20;
 const int MaxNumberOfSeconds = 100;
+
+// Forward declarations
+static void show_usage(std::string);
 
 // Main - expecting arguments
 int main(int argc, char* argv[])
@@ -20,6 +35,7 @@ int main(int argc, char* argv[])
     int opt;
     int nNumberOfSeconds = 100; // Default setting
     int nNumberOfChildren = 20; // Default setting
+    char *cvalue = NULL;
 
     // Go through each parameter entered and
     // prepare for processing
@@ -60,24 +76,40 @@ int main(int argc, char* argv[])
     nNumberOfSeconds = min(nNumberOfSeconds, MaxNumberOfSeconds);
 
     // Check that a data file has been passed in to process
-    string FileToProcess;
     int index = optind;
     if(index < argc)
     {
         // Get the string to process
-        FileToProcess = argv[index];
+        string FileToProcess = argv[index];
 
         // Output what is going to happen
         cout << "Master starting: " << endl 
             << "\t" << nNumberOfChildren << " Max Processes" << endl
             << "\t" << nNumberOfSeconds  << " Max Seconds" << endl << endl;
+
+        // Start the Master process, returning whatever master returns.
+        return processMaster(nNumberOfChildren, nNumberOfSeconds, FileToProcess);
     }
-    
-    // Start the Master process, returning whatever master returns.
-    processMaster(nNumberOfChildren, nNumberOfSeconds, FileToProcess);
 
     // Otherwise, an error -- must pass a filename
     perror ("Error: You must enter a data file to process");
     show_usage(argv[0]);
     return EXIT_FAILURE;
+}
+
+
+// Handle errors in input arguments by showing usage screen
+static void show_usage(std::string name)
+{
+    std::cerr << std::endl
+              << name << " - master app by Brett Huffman for CMP SCI 4760" << std::endl
+              << std::endl
+              << "Usage:\t" << name << " [-h]" << std::endl
+              << "\t" << name << " [-h] [-s i] [-t time] datafile" << std::endl
+              << "Options:" << std::endl
+              << "  -h        This help information is shown" << std::endl
+              << "  -s x      Indicate the number of children allowed to exist in the system at the same time. (Default 20)" << std::endl
+              << "  -t time   The time in seconds after which the process will terminate, even if it has not finished. (Default 100)"
+              << "  datafile  Input file containing one integer on each line."
+              << std::endl << std::endl;
 }
