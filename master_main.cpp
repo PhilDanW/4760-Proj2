@@ -14,7 +14,7 @@
 const int maxChildren = 20;
 const int maxSeconds = 100;
 
-static void show_usage(std::string);
+static void usage(std::string);
 
 int main(int argc, char* argv[])
 {
