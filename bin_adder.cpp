@@ -89,25 +89,25 @@ int main(int argc, char* argv[])
     *addItem_num = 0;
     struct SharedItem* addItems = (struct SharedItem*) (shm_addr+sizeof(int));
     // Determine the two numbers to add and store it in the first position
-    addItems[firstNumber].itemValue = addItems[firstNumber].itemValue + addItems[secondNumber].itemValue;
+    addItems[firstNumber].value = addItems[firstNumber].value + addItems[secondNumber].value;
   
     // Critical Section Handling 
     int j; 
     do
     {
-        addItems[firstNumber].itemState = want_in; // Raise my flag
+        addItems[firstNumber].nodeState = want_in; // Raise my flag
         j = turn; // Set local variable
         while ( j != firstNumber )
-        j = ( addItems[j].itemState != idle ) ? turn : ( j + 1 ) % length;
+        j = ( addItems[j].inodeState != idle ) ? turn : ( j + 1 ) % length;
 
         // Declare intention to enter critical section
-        addItems[firstNumber].itemState = in_cs;
+        addItems[firstNumber].nodeState = in_cs;
         // Check that no one else is in critical section
         for ( j = 0; j < length; j++ )
-            if ( ( j != firstNumber ) && ( addItems[j].itemState == in_cs ) )
+            if ( ( j != firstNumber ) && ( addItems[j].nodeState == in_cs ) )
         break;
     } while (!sigQuitFlag && ( j < length ) || 
-        ( turn != firstNumber && addItems[turn].itemState != idle ));
+        ( turn != firstNumber && addItems[turn].nodeState != idle ));
 
     // Get your turn and enter critical section
     turn = firstNumber;
@@ -134,7 +134,7 @@ int main(int argc, char* argv[])
     while(!sigQuitFlag && secondsFinish > time(NULL));
     strFormattedResult = strChildPid + " " + GetTimeFormatted("Exited Critical Section: ");
     perror(strFormattedResult.c_str());
-    addItems[firstNumber].itemState = idle;
+    addItems[firstNumber].nodeState = idle;
 
     return EXIT_SUCCESS;
 }
