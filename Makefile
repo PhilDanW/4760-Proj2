@@ -1,16 +1,27 @@
-CC = g++
-CFLAGS = -Wall -g
-EXEC = master
-OBJS = bin_adder.o master.o
+#Philip Wright
+#Last Updated: 8:00PM 2/25/2021
+#makefile to compile master and bin_adder source files
+exec1 := master
+source := $(shell find . -name "master*.cpp")
+objs1  := $(patsubst %.cpp, %.o, $(source))
 
-$(EXEC): $(OBJS)
-	$(CC) $(CFLAGS) -o $(EXEC) $(OBJS)
+all: $(exec1)
 
-bin_adder.o: bin_adder.cpp shared.h
-	$(CC) $(CFLAGS) -c bin_adder.cpp
+$(exec1): $(objs1)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(exec1) $(objs1) $(LDLIBS)
 
-master.o: master.h process.cpp shared.h
-	$(CC) $(CFLAGS) -c process.cpp
+# App 2 - builds the bin_adder program
+exec2 := bin_adder
+source := $(shell find . -name "bin_adder*.cpp")
+objs2  := $(patsubst %.cpp, %.o, $(source))
+
+all: $(exec2)
+
+$(exec2): $(objs2)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(exec2) $(objs2) $(LDLIBS)
 
 clean:
-	rm -f $(EXEC) $(OBJS)
+	rm -f $(objs1)
+	rm -f $(exec1)
+	rm -f $(obj2)
+	rm -f $(exec2)
