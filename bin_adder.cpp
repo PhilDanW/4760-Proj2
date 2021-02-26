@@ -1,7 +1,17 @@
+/********************************************
+ * bin_adder - Processes and shared memory
+ * This file is for the bin_adder functionality of the
+ * application.  It kicks off from the main file.
+ * 
+ * Brett Huffman
+ * CMP SCI 4760 - Project 2
+ * Due Feb 23, 2021
+ * bin_adder CPP file for project
+ ********************************************/
 #include <iostream>
 #include "bin_adder.h"
 #include <unistd.h>
-#include "shared.h"
+#include "sharedStructures.h"
 #include <fstream>
 
 // SIGQUIT handling
@@ -172,4 +182,19 @@ int main(int argc, char* argv[])
     addItems[nFirstNumberIndex].itemState = idle;
 
     return EXIT_SUCCESS;
+}
+
+// Handle errors in input arguments by showing usage screen
+static void show_usage(std::string name)
+{
+    std::cerr << std::endl
+              << name << " - bin_adder app by Brett Huffman for CMP SCI 4760" << std::endl
+              << std::endl
+              << "Usage:\t" << name << " xx yy" << std::endl
+              << "Parameters:" << std::endl
+              << "  xx   The index of the first number to add in shared memory" << std::endl
+              << "  yy   The depth of the tree in shared memory" << std::endl
+              << "Note that since this program uses shared memory, it will " << std::endl
+              << "only work when called by the master program." << std::endl
+              << std::endl << std::endl;
 }
