@@ -112,7 +112,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
         node[i].pid = 0;
         node[i].finished = false;
         node[i].nodeDepth = -1;
-        node[i].value = array[i];
+        node[i].value = myArray[i];
         node[i].nodeState = idle;
     }
 
