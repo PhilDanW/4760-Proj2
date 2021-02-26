@@ -1,16 +1,6 @@
-/********************************************
- * main - Processes and shared memory
- * This file is for the main function of the
- * application.  It simply makes sure the
- * program arguements are correct, then
- * kicks off the master functionality for
- * processing.
- * 
- * Brett Huffman
- * CMP SCI 4760 - Project 2
- * Due Feb 23, 2021
- * Main CPP file for project
- ********************************************/
+/* Philip Wright
+* master program that accepts the command line arguments
+*/
 #include <iostream>
 #include <string.h>
 #include <vector>
@@ -21,35 +11,28 @@
 #include "master.h"
 #include <errno.h>
 
-// Constants
-const int MaxNumberOfChildren = 20;
-const int MaxNumberOfSeconds = 100;
+const int maxChildren = 20;
+const int maxSeconds = 100;
 
-// Forward declarations
 static void show_usage(std::string);
 
-// Main - expecting arguments
 int main(int argc, char* argv[])
 {
-    // Argument processing
-    int opt;
-    int nNumberOfSeconds = 100; // Default setting
-    int nNumberOfChildren = 20; // Default setting
-    char *cvalue = NULL;
+    // Process the command line arguments
+    int option;
+    int numSeconds = 100; //Default 
+    int numChildren = 20; //Default
 
-    // Go through each parameter entered and
-    // prepare for processing
-    opterr = 0;
-    while ((opt = getopt(argc, argv, "hs:t:")) != -1) {
-        switch (opt) {
+    while ((option = getopt(argc, argv, "hs:t:")) != -1) {
+        switch (option) {
             case 'h':
-                show_usage(argv[0]);
+                usage(argv[0]);
                 return EXIT_SUCCESS;
             case 's':
-                nNumberOfChildren = atoi(optarg);
+                numChildren = atoi(optarg);
                 break;
             case 't':
-                nNumberOfSeconds = atoi(optarg);
+                numSeconds = atoi(optarg);
                 break;
             case '?': // Unknown arguement                
                 if (isprint (optopt))
@@ -60,56 +43,53 @@ int main(int argc, char* argv[])
                 else
                 {
                     errno = EINVAL;
-                    perror("Unknown option character");
+                    perror("Option character not known.");
                 }
                 return EXIT_FAILURE;
-            default:    // An bad input parameter was entered
+            default:    
                 // Show error because a bad option was found
-                perror ("master: Error: Illegal option found");
-                show_usage(argv[0]);
+                perror ("master: Error: Invalid argument found.");
+                usage(argv[0]);
                 return EXIT_FAILURE;
         }
     }
 
-    // Set the correct default values (min of both)
-    nNumberOfChildren = min(nNumberOfChildren, MaxNumberOfChildren);
-    nNumberOfSeconds = min(nNumberOfSeconds, MaxNumberOfSeconds);
+    //Clamp the values
+    numChildren = min(numChildren, maxChildren);
+    numSeconds = min(numSeconds, maxSeconds);
 
     // Check that a data file has been passed in to process
     int index = optind;
     if(index < argc)
     {
-        // Get the string to process
-        string FileToProcess = argv[index];
+        // Get the string of the file to process
+        string File = argv[index];
+        cout << "Master process starting: " << endl 
+            << "\t" << numChildren << " Processes" << endl
+            << "\t" << numSeconds  << " Seconds" << endl << endl;
 
-        // Output what is going to happen
-        cout << "Master starting: " << endl 
-            << "\t" << nNumberOfChildren << " Max Processes" << endl
-            << "\t" << nNumberOfSeconds  << " Max Seconds" << endl << endl;
-
-        // Start the Master process, returning whatever master returns.
-        return processMaster(nNumberOfChildren, nNumberOfSeconds, FileToProcess);
+        //invoke the master process to read the file and spawn child processes
+        return processMaster(numChildren, numSeconds, File);
     }
-
-    // Otherwise, an error -- must pass a filename
-    perror ("Error: You must enter a data file to process");
-    show_usage(argv[0]);
+    
+    perror ("Error: Must provide data file in order to process");
+    usage(argv[0]);
     return EXIT_FAILURE;
 }
 
 
 // Handle errors in input arguments by showing usage screen
-static void show_usage(std::string name)
+static void usage(std::string name)
 {
     std::cerr << std::endl
-              << name << " - master app by Brett Huffman for CMP SCI 4760" << std::endl
+              << name << " - master" << std::endl
               << std::endl
               << "Usage:\t" << name << " [-h]" << std::endl
-              << "\t" << name << " [-h] [-s i] [-t time] datafile" << std::endl
+              << "\t" << name << " [-h] [-s i] [-t time] inputfile" << std::endl
               << "Options:" << std::endl
-              << "  -h        This help information is shown" << std::endl
-              << "  -s x      Indicate the number of children allowed to exist in the system at the same time. (Default 20)" << std::endl
-              << "  -t time   The time in seconds after which the process will terminate, even if it has not finished. (Default 100)"
-              << "  datafile  Input file containing one integer on each line."
+              << "  -h        This help menu is displayed" << std::endl
+              << "  -s x      The number of child processes allowed in the system at the same time. (Default 20)" << std::endl
+              << "  -t time   The time in seconds it takes to terminate a process, even if its running. (Default 100)"
+              << "  inputfile  Input file containing one integers."
               << std::endl << std::endl;
 }
