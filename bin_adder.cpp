@@ -15,7 +15,7 @@ void sigQuitHandler(int sig) {
 }
 
 extern int turn; // Critical Section Flag
-const char* outputLog = "adder_log";
+const char* outputFile = "adder_log";
 
 using namespace std;
 int main(int argc, char* argv[])
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     // Cast it to our structure array
     int* addItem_num = (int*) shm_addr;
     *addItem_num = 0;
-    struct SharedItem* addItems = (struct Shared*) (shm_addr+sizeof(int));
+    struct SharedItem* addItems = (struct SharedItem*) (shm_addr+sizeof(int));
     // Determine the two numbers to add and store it in the first position
     addItems[firstNumber].itemValue = addItems[firstNumber].itemValue + addItems[secondNumber].itemValue;
   
