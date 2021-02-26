@@ -1,3 +1,16 @@
+/********************************************
+ * sharedStructures - This is a file that
+ * contains all the structures shared between
+ * the master + bin_adder processes.  It
+ * contains library calls, the main structure
+ * containing data, and semephores.
+ * 
+ * Brett Huffman
+ * CMP SCI 4760 - Project 2
+ * Due Feb 23, 2021
+ * sharedStructures .h file for project
+ ********************************************/
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <errno.h>
@@ -13,6 +26,16 @@
 
 // Arguement processing
 extern int opterr;
+
+// Semiphore union
+union semun {
+    int                 val;
+    struct semid_ds *   buf;
+    unsigned short *    array;
+#if defined(__linux__)
+    struct seminfo *    __buf;
+#endif
+};
 
 // Critical Section Processing
 enum state { idle, want_in, in_cs };
@@ -66,19 +89,4 @@ string GetStringFromInt(const int nVal)
     string strFinalVal = sDep;                    
     free(sDep);
     return strFinalVal;
-}
-
-void show_usage(std::string name)
-{
-    std::cerr << std::endl
-              << name << " - master app by Brett Huffman for CMP SCI 4760" << std::endl
-              << std::endl
-              << "Usage:\t" << name << " [-h]" << std::endl
-              << "\t" << name << " [-h] [-s i] [-t time] datafile" << std::endl
-              << "Options:" << std::endl
-              << "  -h        This help information is shown" << std::endl
-              << "  -s x      Indicate the number of children allowed to exist in the system at the same time. (Default 20)" << std::endl
-              << "  -t time   The time in seconds after which the process will terminate, even if it has not finished. (Default 100)"
-              << "  datafile  Input file containing one integer on each line."
-              << std::endl << std::endl;
 }
