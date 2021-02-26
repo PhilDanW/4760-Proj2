@@ -51,66 +51,8 @@ int main(int argc, char* argv[])
     string strShow = strChildPid + " Started - bin_adder " + GetStringFromInt(firstNumber) + " " + GetStringFromInt(depth);
     perror(strShow.c_str());
   
-    allocateSM();
-
-    // Determine the two numbers to add and store it in the first position
-    addItems[firstNumber].itemValue = addItems[firstNumber].itemValue + addItems[secondNumber].itemValue;
-  
-    // Critical Section Handling 
-    int j; 
-    do
-    {
-        addItems[firstNumber].itemState = want_in; // Raise my flag
-        j = turn; // Set local variable
-        while ( j != firstNumber )
-        j = ( addItems[j].itemState != idle ) ? turn : ( j + 1 ) % length;
-
-        // Declare intention to enter critical section
-        addItems[firstNumber].itemState = in_cs;
-        // Check that no one else is in critical section
-        for ( j = 0; j < length; j++ )
-            if ( ( j != firstNumber ) && ( addItems[j].itemState == in_cs ) )
-        break;
-    } while (!sigQuitFlag && ( j < length ) || 
-        ( turn != firstNumber && addItems[turn].itemState != idle ));
-
-    // Get your turn and enter critical section
-    turn = firstNumber;
-
-    //Enter Critical Secion
-    enterCritical();
-  
-    //Exit Critical Section
-    // wait 1 second first
-    time_t secondsFinish = time(NULL) + 1;   // time it exited
-  
-    while(!sigQuitFlag && secondsFinish > time(NULL));
-    strFormattedResult = strChildPid + " " + GetTimeFormatted("Exited Critical Section: ");
-    perror(strFormattedResult.c_str());
-    addItems[firstNumber].itemState = idle;
-
-    return EXIT_SUCCESS;
-}
-
-static void enterCritical() {
-        // Print it to perror
-        string strFormattedResult = strChildPid + " " + GetTimeFormatted("Entered Critical Section: ");
-        perror(strFormattedResult.c_str());
-
-        // Write to log file
-        ofstream ofoutputFile (outputFile, ios::app);
-        if (outputFile.is_open())
-        {
-            outputFile << GetTimeFormatted("") << "\t"
-                    << childPid   << "\t"
-                    << firstNumber << "\t"
-                    << depth << endl;
-            ofoutputFile.close();
-        }
-}
-
-static void allocateSM() {
-  // Allocate the shared memory and error if it fails
+    
+    // Allocate the shared memory and error if it fails
     if ((key = ftok(HostProcess, 100)) == -1) {
         perror("ftok");
         exit(EXIT_FAILURE);
@@ -146,6 +88,55 @@ static void allocateSM() {
     int* addItem_num = (int*) shm_addr;
     *addItem_num = 0;
     struct AddItem* addItems = (struct AddItem*) (shm_addr+sizeof(int));
+    // Determine the two numbers to add and store it in the first position
+    addItems[firstNumber].itemValue = addItems[firstNumber].itemValue + addItems[secondNumber].itemValue;
+  
+    // Critical Section Handling 
+    int j; 
+    do
+    {
+        addItems[firstNumber].itemState = want_in; // Raise my flag
+        j = turn; // Set local variable
+        while ( j != firstNumber )
+        j = ( addItems[j].itemState != idle ) ? turn : ( j + 1 ) % length;
+
+        // Declare intention to enter critical section
+        addItems[firstNumber].itemState = in_cs;
+        // Check that no one else is in critical section
+        for ( j = 0; j < length; j++ )
+            if ( ( j != firstNumber ) && ( addItems[j].itemState == in_cs ) )
+        break;
+    } while (!sigQuitFlag && ( j < length ) || 
+        ( turn != firstNumber && addItems[turn].itemState != idle ));
+
+    // Get your turn and enter critical section
+    turn = firstNumber;
+
+    // Print it to perror
+    string strFormattedResult = strChildPid + " " + GetTimeFormatted("Entered Critical Section: ");
+    perror(strFormattedResult.c_str());
+
+     // Write to log file
+     ofstream ofoutputFile (outputFile, ios::app);
+     if (outputFile.is_open())
+     {
+         outputFile << GetTimeFormatted("") << "\t"
+                    << childPid   << "\t"
+                    << firstNumber << "\t"
+                    << depth << endl;
+         ofoutputFile.close();
+      }
+  
+    //Exit Critical Section
+    // wait 1 second first
+    time_t secondsFinish = time(NULL) + 1;   // time it exited
+  
+    while(!sigQuitFlag && secondsFinish > time(NULL));
+    strFormattedResult = strChildPid + " " + GetTimeFormatted("Exited Critical Section: ");
+    perror(strFormattedResult.c_str());
+    addItems[firstNumber].itemState = idle;
+
+    return EXIT_SUCCESS;
 }
 
 // Handle errors in input arguments by showing usage screen
