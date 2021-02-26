@@ -11,7 +11,6 @@
 // Static process counter => Never > 20 (1 Parent + 19 Children)
 const int MAX_PROCESSES = 19;
 static int ProcessCount = 0;
-const int BUFFERSIZE = 8192;
 
 using namespace std;
 
@@ -127,9 +126,7 @@ int processMaster(int numberOfChildrenAllowed, int timeInSecondsToTerminate, str
     // Where xx is start of processing index and yy is depth.
     // And the result should just go in the yy spot
     bool bComplete = false;
-    int status;
-    int arrayIndex = 0;
-    pid_t cpid, waitPID;
+    pid_t waitPID;
     int wstatus;
 
     // *********** Node Print *****************
