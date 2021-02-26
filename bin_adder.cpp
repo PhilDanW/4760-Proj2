@@ -1,7 +1,7 @@
 #include <iostream>
 #include "bin_adder.h"
 #include <unistd.h>
-#include "sharedStructures.h"
+#include "shared.h"
 #include <fstream>
 
 // SIGQUIT handling
