@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
         addItems[firstNumber].nodeState = want_in; // Raise my flag
         j = turn; // Set local variable
         while ( j != firstNumber )
-        j = ( addItems[j].inodeState != idle ) ? turn : ( j + 1 ) % length;
+        j = ( addItems[j].nodeState != idle ) ? turn : ( j + 1 ) % length;
 
         // Declare intention to enter critical section
         addItems[firstNumber].nodeState = in_cs;
@@ -117,14 +117,14 @@ int main(int argc, char* argv[])
     perror(strFormattedResult.c_str());
 
      // Write to log file
-     ofstream outputFile (outputFile, ios::app);
-     if (outputFile.is_open())
+     ofstream ofoutputFile (outputFile, ios::app);
+     if (ofoutputFile.is_open())
      {
-         outputFile << GetTimeFormatted("") << "\t"
+         ofoutputFile << GetTimeFormatted("") << "\t"
                     << childPid   << "\t"
                     << firstNumber << "\t"
                     << depth << endl;
-         outputFile.close();
+         ofoutputFile.close();
       }
   
     //Exit Critical Section
