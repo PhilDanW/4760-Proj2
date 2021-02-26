@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     {
         errno = EINVAL;
         perror(e.what());
-        show_usage(argv[0]);
+        usage(argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -149,16 +149,15 @@ static void allocateSM() {
 }
 
 // Handle errors in input arguments by showing usage screen
-static void show_usage(std::string name)
+static void usage(std::string name)
 {
     std::cerr << std::endl
-              << name << " - bin_adder app by Brett Huffman for CMP SCI 4760" << std::endl
+              << name << " - bin_adder" << std::endl
               << std::endl
               << "Usage:\t" << name << " xx yy" << std::endl
               << "Parameters:" << std::endl
               << "  xx   The index of the first number to add in shared memory" << std::endl
               << "  yy   The depth of the tree in shared memory" << std::endl
-              << "Note that since this program uses shared memory, it will " << std::endl
-              << "only work when called by the master program." << std::endl
+              << "This program will only work when called by the master program." << std::endl
               << std::endl << std::endl;
 }
