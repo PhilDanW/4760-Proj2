@@ -13,9 +13,6 @@
 const int MaxNumberOfChildren = 20;
 const int MaxNumberOfSeconds = 100;
 
-// Forward declarations
-static void show_usage(std::string);
-
 // Main - expecting arguments
 int main(int argc, char* argv[])
 {
