@@ -1,24 +1,16 @@
-appname1 := master
-srcfiles := $(shell find . -name "master*.cpp")
-objects1  := $(patsubst %.cpp, %.o, $(srcfiles))
+CC = g++
+CFLAGS = -Wall -g
+EXEC = master
+OBJS = bin_adder.o main.o
 
-all: $(appname1)
+$(EXEC): $(OBJS)
+	$(CC) $(CFLAGS) -o $(EXEC) $(OBJS)
 
-$(appname1): $(objects1)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(appname1) $(objects1) $(LDLIBS)
+bin_adder.o: bin_adder.cpp shared.h
+	$(CC) $(CFLAGS) -c bin_adder.cpp
 
-# App 2 - builds the bin_adder program
-appname2 := bin_adder
-srcfiles := $(shell find . -name "bin_adder*.cpp")
-objects2  := $(patsubst %.cpp, %.o, $(srcfiles))
-
-all: $(appname2)
-
-$(appname2): $(objects2)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(appname2) $(objects2) $(LDLIBS)
+master.o: master.cpp master.h process.cpp shared.h
+	$(CC) $(CFLAGS) -c master.cpp process.cpp
 
 clean:
-	rm -f $(objects1)
-	rm -f $(appname1)
-	rm -f $(objects2)
-	rm -f $(appname2)
+	rm -f $(EXEC) $(OBJS)
