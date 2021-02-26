@@ -41,13 +41,13 @@ union semun {
 enum state { idle, want_in, in_cs };
 
 // Shared Memory structure
-struct AddItem {
-    bool readyToProcess;    // Ready to Process
-    pid_t pidAssigned;      // In-Process
-    bool complete;          // Completed Process
+struct SharedItem {
+    bool ready;             // Ready to Process
+    pid_t pid;              // In-Process
+    bool finished;          // Process that is done
     int nodeDepth;          // Depth that this node is processing
-    int itemValue;          // The actual value
-    state itemState;        // The Critical Secion Flag
+    int value;              // The actual value
+    state nodeState;        // The Critical Secion Flag
 };
 
 key_t key = 0;  // Shared key
@@ -56,31 +56,7 @@ char* shm_addr;
 
 const char* HostProcess = "./master";
 const char* ChildProcess = "./bin_adder";
-
-
-/***************************************************
- * Helper Functions
- * *************************************************/
-// For time formatting used throughout both programs
-string GetTimeFormatted(const char* prePendString)
-{
-    time_t rawtime;
-    struct tm * timeinfo;
-    char buffer[10];
-    
-    // Get time
-    time (&rawtime);
-    timeinfo = localtime (&rawtime);
-
-    // Format time for HH:MM:SS
-    strftime (buffer,80,"%T",timeinfo);
-
-    string strReturn = prePendString;
-    strReturn.append(buffer);
-    return strReturn;
-}
-
-// Returns a string from an int
+// takes in a string and returns an int
 string GetStringFromInt(const int nVal)
 {
     int length = snprintf( NULL, 0, "%d", nVal);
@@ -90,3 +66,24 @@ string GetStringFromInt(const int nVal)
     free(sDep);
     return strFinalVal;
 }
+
+//For time formatting
+string GetTimeFormatted(const char* prePendString)
+{
+    time_t rawtime;
+    struct tm * timeinfo;
+    char buffer[10];
+    
+    //Get time
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+
+    //HH:MM:SS
+    strftime (buffer,80,"%T",timeinfo);
+
+    string strReturn = prePendString;
+    strReturn.append(buffer);
+    return strReturn;
+}
+
+
