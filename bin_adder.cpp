@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   
     
     // Allocate the shared memory and error if it fails
-    if ((key = ftok(HostProcess, 100)) == -1) {
+    if ((key = ftok(Host, 100)) == -1) {
         perror("ftok");
         exit(EXIT_FAILURE);
     }
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     struct shmid_ds shmid_ds;
     shmctl(shm_id, IPC_STAT, &shmid_ds);
     size_t realSize = shmid_ds.shm_segsz;
-    int length = (int) shmid_ds.shm_segsz / sizeof(AddItem);
+    int length = (int) shmid_ds.shm_segsz / sizeof(SharedItem);
 
     // Now we have the size - actually setup with shmget
     shm_id = shmget(key, realSize, 0);
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
     // Cast it to our structure array
     int* addItem_num = (int*) shm_addr;
     *addItem_num = 0;
-    struct AddItem* addItems = (struct AddItem*) (shm_addr+sizeof(int));
+    struct SharedItem* addItems = (struct Shared*) (shm_addr+sizeof(int));
     // Determine the two numbers to add and store it in the first position
     addItems[firstNumber].itemValue = addItems[firstNumber].itemValue + addItems[secondNumber].itemValue;
   
@@ -117,14 +117,14 @@ int main(int argc, char* argv[])
     perror(strFormattedResult.c_str());
 
      // Write to log file
-     ofstream ofoutputFile (outputFile, ios::app);
+     ofstream outputFile (outputFile, ios::app);
      if (outputFile.is_open())
      {
          outputFile << GetTimeFormatted("") << "\t"
                     << childPid   << "\t"
                     << firstNumber << "\t"
                     << depth << endl;
-         ofoutputFile.close();
+         outputFile.close();
       }
   
     //Exit Critical Section
