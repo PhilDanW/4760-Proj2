@@ -23,5 +23,5 @@ $(exec2): $(objs2)
 clean:
 	rm -f $(objs1)
 	rm -f $(exec1)
-	rm -f $(obj2)
+	rm -f $(objs2)
 	rm -f $(exec2)
