@@ -17,7 +17,7 @@ static int count = 0;
 using namespace std;
 
 //variables to keep track of struct items and info
-vector<int> array;
+vector<int> myArray;
 int* num;
 struct SharedItem* node;
 
@@ -54,7 +54,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
 
     while ((read = getline(&line, &len, fileName)) != -1) {
         int i = atoi(line);
-        array.push_back(i);  // Place each line in Vector
+        myArray.push_back(i);  // Place each line in Vector
     }
     fclose(fileName);
     free(line);
@@ -63,23 +63,23 @@ int processMaster(int numChildren, int seconds, string dataFile)
     start = time(NULL);
 
     // Determine power of 2
-    int index = array.size();
+    int index = myArray.size();
     int level = 0;
     while (index >>= 1) ++level;
 
     // Fill in zeros if not a power of 2
-    if(pow(2, level) < array.size())
+    if(pow(2, level) < myArray.size())
     {
         level++;
         do
         {
             // Pad Array with zeros
-            array.push_back(0);
+            myArray.push_back(0);
         }
-        while(pow(2, level) > array.size());
+        while(pow(2, level) > myArray.size());
     }
     // process the file with our child processes.
-    int itemCount = array.size();
+    int itemCount = myArray.size();
     
     // Allocate the shared memory
     if ((key = ftok(Host, 100)) == -1) {
