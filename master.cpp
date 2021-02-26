@@ -61,11 +61,12 @@ int main(int argc, char* argv[])
     nNumberOfSeconds = min(nNumberOfSeconds, MaxNumberOfSeconds);
 
     // Check that a data file has been passed in to process
+    string FileToProcess;
     int index = optind;
     if(index < argc)
     {
         // Get the string to process
-        string FileToProcess = argv[index];
+        FileToProcess = argv[index];
 
         // Output what is going to happen
         cout << "Master starting: " << endl 
