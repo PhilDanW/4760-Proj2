@@ -19,7 +19,7 @@ using namespace std;
 //variables to keep track of struct items and info
 vector<int> array;
 int* num;
-struct AddItem* node;
+struct SharedItem* node;
 
 // SIGINT handling
 volatile sig_atomic_t sigIntFlag = 0;
