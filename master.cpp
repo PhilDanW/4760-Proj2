@@ -12,7 +12,7 @@
 #include "shared.h"
 
 const int MAX_PROCESSES = 19;
-static int count = 0;
+static int myCount = 0;
 
 using namespace std;
 
@@ -133,11 +133,11 @@ int processMaster(int numChildren, int seconds, string dataFile)
     {
         // look for Ready node first by depth then by every node in the array
         if(!sigIntFlag && !((time(NULL)-start) > seconds)
-            && count < numChildren && count < MAX_PROCESSES)
+            && myCount < numChildren && myCount < MAX_PROCESSES)
         {
             for(int i=0;i<nDepth;i++)
             {
-                for(int j=0; j < itemCount && count < numChildren && count < MAX_PROCESSES; j += pow(2, i+1))
+                for(int j=0; j < itemCount && myCount < numChildren && myCount < MAX_PROCESSES; j += pow(2, i+1))
                 {
                     // j isthe nodes we need to check.  
                     //If process is Ready, check it's partner.  
@@ -157,7 +157,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
                         node[nCheck1].nodeDepth = node[nCheck2].nodeDepth = i;
                         
                         // Increment our Process Count
-                        count++;
+                        myCount++;
 
                         // Fork and store pid in each node
                         int pid = forkProcess(nCheck1, i);
@@ -226,7 +226,7 @@ int processMaster(int numChildren, int seconds, string dataFile)
             if (WIFEXITED(wstatus) && waitPID > 0)
             {
                 // Decrement our process counter
-                count--;
+                myCount--;
 
                 // Success! Child processed correctly = Show it
                 for(int j=0; j < itemCount; j++)
