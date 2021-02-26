@@ -20,7 +20,6 @@ int main(int argc, char* argv[])
     int opt;
     int nNumberOfSeconds = 100; // Default setting
     int nNumberOfChildren = 20; // Default setting
-    char *cvalue = NULL;
 
     // Go through each parameter entered and
     // prepare for processing
