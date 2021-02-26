@@ -1,77 +1,116 @@
-/********************************************
- * bin_adder - Processes and shared memory
- * This file is for the bin_adder functionality of the
- * application.  It kicks off from the main file.
- * 
- * Brett Huffman
- * CMP SCI 4760 - Project 2
- * Due Feb 23, 2021
- * bin_adder CPP file for project
- ********************************************/
+/* Philip Wright
+ * CMP SCI 4760
+ * bin_adder cpp file that is called in the main part of the program
+ */
 #include <iostream>
 #include "bin_adder.h"
 #include <unistd.h>
-#include "sharedStructures.h"
+#include "shared.h"
 #include <fstream>
 
 // SIGQUIT handling
 volatile sig_atomic_t sigQuitFlag = 0;
-void sigQuitHandler(int sig){ // can be called asynchronously
-  sigQuitFlag = 1; // set flag
+void sigQuitHandler(int sig) { 
+  sigQuitFlag = 1; //flag
 }
 
-// Critical Section Turn Flag
-extern int turn;
-
-const char* LogFile = "adder_log";
+extern int turn; // Critical Section Flag
+const char* outputLog = "adder_log";
 
 using namespace std;
-
 int main(int argc, char* argv[])
 {
+    signal(SIGINT, sigQuitHandler);  //SIGQUIT handling
 
-    // Register SIGQUIT handling
-    signal(SIGINT, sigQuitHandler);
-
-    int turn = 0;   // Used for Critical Section
-    
-    // Variables to be used
-    int nFirstNumberIndex = 0;
-    int nSecondNumberIndex = 0;
-    int nDepth = 0;
-
-    // Argument processing
-    // If any error happens, show error statement and
-    // return error immediately
+    int turn = 0;   // turn for Critical Section
+    int firstNumber = 0;
+    int secondNumber = 0;
+    int depth = 0;
+     
+    // procress arguments and return any errors immediately
     try
     {
         if(argc!=2) throw std::exception();// ("Incorrect Arguements");
-        int index = optind;
-        nFirstNumberIndex = atoi(argv[0]);
-        nDepth = atoi(argv[1]);
+        firstNumber = atoi(argv[0]);
+        depth = atoi(argv[1]);
     }
     catch(const std::exception& e)
     {
         errno = EINVAL;
         perror(e.what());
-        // General error
         show_usage(argv[0]);
         exit(EXIT_FAILURE);
     }
 
     // Calculate the second index
-    nSecondNumberIndex = pow(2, nDepth) + nFirstNumberIndex;
+    secondNumber = pow(2, depth) + firstNumber;
 
     pid_t childPid = getpid();
 
-    // Show startup params to perror
     string strChildPid = GetStringFromInt(childPid);
-    string strShow = strChildPid + " Started - bin_adder " + 
-        GetStringFromInt(nFirstNumberIndex) + " " + GetStringFromInt(nDepth);
+    string strShow = strChildPid + " Started - bin_adder " + GetStringFromInt(firstNumber) + " " + GetStringFromInt(depth);
     perror(strShow.c_str());
+  
+    allocateSM();
 
-    // Allocate the shared memory
-    // And get ready for read/write
+    // Determine the two numbers to add and store it in the first position
+    addItems[firstNumber].itemValue = addItems[firstNumber].itemValue + addItems[secondNumber].itemValue;
+  
+    // Critical Section Handling 
+    int j; 
+    do
+    {
+        addItems[firstNumber].itemState = want_in; // Raise my flag
+        j = turn; // Set local variable
+        while ( j != firstNumber )
+        j = ( addItems[j].itemState != idle ) ? turn : ( j + 1 ) % length;
+
+        // Declare intention to enter critical section
+        addItems[firstNumber].itemState = in_cs;
+        // Check that no one else is in critical section
+        for ( j = 0; j < length; j++ )
+            if ( ( j != firstNumber ) && ( addItems[j].itemState == in_cs ) )
+        break;
+    } while (!sigQuitFlag && ( j < length ) || 
+        ( turn != firstNumber && addItems[turn].itemState != idle ));
+
+    // Get your turn and enter critical section
+    turn = firstNumber;
+
+    //Enter Critical Secion
+    enterCritical();
+  
+    //Exit Critical Section
+    // wait 1 second first
+    time_t secondsFinish = time(NULL) + 1;   // time it exited
+  
+    while(!sigQuitFlag && secondsFinish > time(NULL));
+    strFormattedResult = strChildPid + " " + GetTimeFormatted("Exited Critical Section: ");
+    perror(strFormattedResult.c_str());
+    addItems[firstNumber].itemState = idle;
+
+    return EXIT_SUCCESS;
+}
+
+static void enterCritical() {
+        // Print it to perror
+        string strFormattedResult = strChildPid + " " + GetTimeFormatted("Entered Critical Section: ");
+        perror(strFormattedResult.c_str());
+
+        // Write to log file
+        ofstream ofoutputFile (outputFile, ios::app);
+        if (outputFile.is_open())
+        {
+            outputFile << GetTimeFormatted("") << "\t"
+                    << childPid   << "\t"
+                    << firstNumber << "\t"
+                    << depth << endl;
+            ofoutputFile.close();
+        }
+}
+
+static void allocateSM() {
+  // Allocate the shared memory and error if it fails
     if ((key = ftok(HostProcess, 100)) == -1) {
         perror("ftok");
         exit(EXIT_FAILURE);
@@ -107,81 +146,6 @@ int main(int argc, char* argv[])
     int* addItem_num = (int*) shm_addr;
     *addItem_num = 0;
     struct AddItem* addItems = (struct AddItem*) (shm_addr+sizeof(int));
-
-    // Check that everything is okay before we go any further
-    if(nFirstNumberIndex > length || nSecondNumberIndex > length)
-    {
-        // Error found
-        perror("bin_adder: ");
-        exit(EXIT_FAILURE);
-    }
-
-    // Determine the two numbers to add and store it in the first position
-    addItems[nFirstNumberIndex].itemValue = 
-        addItems[nFirstNumberIndex].itemValue + addItems[nSecondNumberIndex].itemValue;
-
-//    cout << "Total: " << addItems[nFirstNumberIndex].itemValue << endl;
-
-
-    // Critical Section Handling Routine
-    // Keep the state flag in addItems[nFirstNumberIndex].state
-    
-    int j; // Local to this process
-    do
-    {
-        addItems[nFirstNumberIndex].itemState = want_in; // Raise my flag
-        j = turn; // Set local variable
-        while ( j != nFirstNumberIndex )
-        j = ( addItems[j].itemState != idle ) ? turn : ( j + 1 ) % length;
-
-        // Declare intention to enter critical section
-        addItems[nFirstNumberIndex].itemState = in_cs;
-        // Check that no one else is in critical section
-        for ( j = 0; j < length; j++ )
-            if ( ( j != nFirstNumberIndex ) && ( addItems[j].itemState == in_cs ) )
-        break;
-    } while (!sigQuitFlag && ( j < length ) || 
-        ( turn != nFirstNumberIndex && addItems[turn].itemState != idle ));
-
-    // Assign turn to self and enter critical section
-    turn = nFirstNumberIndex;
-
-    // ************ Enter Critical Secion ************
-    
-    // Print it to perror
-    string strFormattedResult = strChildPid + " " + GetTimeFormatted("Entered Critical Section: ");
-    perror(strFormattedResult.c_str());
-
-    // Write to log file
-    ofstream ofLogFile (LogFile, ios::app);
-    if (ofLogFile.is_open())
-    {
-        ofLogFile << GetTimeFormatted("") << "\t"
-                << childPid   << "\t"
-                << nFirstNumberIndex << "\t"
-                << nDepth << endl;
-        ofLogFile.close();
-    }
-
-    // ************ Exit Critical Section ************
-
-    // Make a 1-second wait time
-    time_t secondsFinish = time(NULL) + 1;   // Finish time
-
-    // Loop until a SIGQUIT happens or we reach Finish Time
-    while(!sigQuitFlag && secondsFinish > time(NULL))
-    ;
-
-    // Print it to perror
-    strFormattedResult = strChildPid + " " + GetTimeFormatted("Exited Critical Section: ");
-    perror(strFormattedResult.c_str());
-
-    // Exit section is removed because we aren't looping in our example
-    // we are just exiting the application.
-
-    addItems[nFirstNumberIndex].itemState = idle;
-
-    return EXIT_SUCCESS;
 }
 
 // Handle errors in input arguments by showing usage screen
